@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantacalcio Serie A 25/26</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        #header {
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        #header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            color: #1a3c34;
+            text-transform: uppercase;
+        }
+
+        #header select, #header button {
+            margin: 5px;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background: #1a3c34;
+            color: white;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            transition: background 0.3s ease;
+        }
+
+        #header select:hover, #header button:hover {
+            background: #2a5c4a;
+        }
+
+        #field-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #field {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 150px);
+            max-height: 700px;
+            background: linear-gradient(to bottom, #2ecc71, #27ae60);
+            border: 2px solid #1a3c34;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .line {
+            position: absolute;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .fwd { top: 5%; }
+        .mid { top: 35%; }
+        .def { top: 65%; }
+        .gk { top: 85%; }
+
+        .slot {
+            width: 20%;
+            min-width: 80px;
+            height: 50px;
+            background: #ffffff;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1a3c34;
+            cursor: pointer;
+            margin: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, background 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .slot:hover {
+            transform: scale(1.05);
+            background: #e6fffa;
+        }
+
+        .selected {
+            border: 3px solid #ff4d4d;
+            background: #ffe6e6;
+        }
+
+        #bench {
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        #bench h2 {
+            font-size: 1.5rem;
+            color: #1a3c34;
+            margin: 10px 0;
+        }
+
+        #bench-slots {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        #modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #modal-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #modal-content h2 {
+            margin: 0 0 10px;
+            font-size: 1.3rem;
+            color: #1a3c34;
+        }
+
+        #modal-search {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        #modal-players {
+            list-style: none;
+            padding: 0;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        #modal-players li {
+            padding: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            color: #1a3c34;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        #modal-players li:hover {
+            background: rgba(46, 204, 113, 0.1);
+        }
+
+        #modal-close {
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #ff4d4d;
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+            font-size: 1rem;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (max-width: 600px) {
+            #header h1 {
+                font-size: 1.5rem;
+            }
+
+            #header select, #header button {
+                font-size: 0.8rem;
+                padding: 8px 12px;
+            }
+
+            .slot {
+                width: 28%;
+                min-width: 70px;
+                height: 45px;
+                font-size: 0.8rem;
+            }
+
+            #field {
+                height: calc(100vh - 120px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Fantacalcio Serie A 25/26</h1>
+        <select id="module-select">
+            <option value="3-3-4">3-3-4</option>
+            <option value="3-4-3">3-4-3</option>
+            <option value="3-5-2">3-5-2</option>
+            <option value="3-6-1">3-6-1</option>
+            <option value="4-2-4">4-2-4</option>
+            <option value="4-3-3">4-3-3</option>
+            <option value="4-4-2">4-4-2</option>
+            <option value="4-5-1">4-5-1</option>
+            <option value="5-2-3">5-2-3</option>
+            <option value="5-3-2">5-3-2</option>
+            <option value="5-4-1">5-4-1</option>
+            <option value="6-3-1">6-3-1</option>
+        </select>
+        <button id="clear-btn">Pulisci rosa</button>
+        <button id="new-btn">Nuova rosa</button>
+        <button id="download-btn">Scarica Immagine</button>
+    </div>
+    <div id="field-container">
+        <div id="field"></div>
+        <div id="bench">
+            <h2>Panchina</h2>
+            <div id="bench-slots"></div>
+        </div>
+    </div>
+    <div id="modal">
+        <div id="modal-content">
+            <h2>Seleziona Giocatore</h2>
+            <input type="text" id="modal-search" placeholder="Cerca cognome...">
+            <ul id="modal-players"></ul>
+            <button id="modal-close">Chiudi</button>
+        </div>
+    </div>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        const players = [
+            {cognome: 'Martínez', ruolo: 'P', squadra: 'Inter'},
+            {cognome: 'Sommer', ruolo: 'P', squadra: 'Inter'},
+            {cognome: 'Di Gennaro', ruolo: 'P', squadra: 'Inter'},
+            {cognome: 'Bastoni', ruolo: 'D', squadra: 'Inter'},
+            {cognome: 'Bisseck', ruolo: 'D', squadra: 'Inter'},
+            {cognome: 'Pavard', ruolo: 'D', squadra: 'Inter'},
+            {cognome: 'de Vrij', ruolo: 'D', squadra: 'Inter'},
+            {cognome: 'Palacios', ruolo: 'D', squadra: 'Inter'},
+            {cognome: 'Acerbi', ruolo: 'D', squadra: 'Inter'},
+            {cognome: 'Dimarco', ruolo: 'D', squadra: 'Inter'},
+            {cognome: 'Augusto', ruolo: 'D', squadra: 'Inter'},
+            {cognome: 'Dumfries', ruolo: 'D', squadra: 'Inter'},
+            {cognome: 'Darmian', ruolo: 'D', squadra: 'Inter'},
+            {cognome: 'Çalhanoğlu', ruolo: 'C', squadra: 'Inter'},
+            {cognome: 'Sučić', ruolo: 'C', squadra: 'Inter'},
+            {cognome: 'Asllani', ruolo: 'C', squadra: 'Inter'},
+            {cognome: 'Barella', ruolo: 'C', squadra: 'Inter'},
+            {cognome: 'Frattesi', ruolo: 'C', squadra: 'Inter'},
+            {cognome: 'Diouf', ruolo: 'C', squadra: 'Inter'},
+            {cognome: 'Zieliński', ruolo: 'C', squadra: 'Inter'},
+            {cognome: 'Mkhitaryan', ruolo: 'C', squadra: 'Inter'},
+            {cognome: 'Henrique', ruolo: 'C', squadra: 'Inter'},
+            {cognome: 'Martínez', ruolo: 'A', squadra: 'Inter'},
+            {cognome: 'Thuram', ruolo: 'A', squadra: 'Inter'},
+            {cognome: 'Esposito', ruolo: 'A', squadra: 'Inter'},
+            {cognome: 'Bonny', ruolo: 'A', squadra: 'Inter'},
+            {cognome: 'Taremi', ruolo: 'A', squadra: 'Inter'},
+            {cognome: 'Di Gregorio', ruolo: 'P', squadra: 'Juventus'},
+            {cognome: 'Perin', ruolo: 'P', squadra: 'Juventus'},
+            {cognome: 'Pinsoglio', ruolo: 'P', squadra: 'Juventus'},
+            {cognome: 'Bremer', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'Kalulu', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'Gatti', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'Kelly', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'Djaló', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'Rugani', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'González', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'Cambiaso', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'Cabal', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'Rouhi', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'Savona', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'João Mário', ruolo: 'D', squadra: 'Juventus'},
+            {cognome: 'Locatelli', ruolo: 'C', squadra: 'Juventus'},
+            {cognome: 'Arthur', ruolo: 'C', squadra: 'Juventus'},
+            {cognome: 'Thuram', ruolo: 'C', squadra: 'Juventus'},
+            {cognome: 'McKennie', ruolo: 'C', squadra: 'Juventus'},
+            {cognome: 'Miretti', ruolo: 'C', squadra: 'Juventus'},
+            {cognome: 'Kostić', ruolo: 'C', squadra: 'Juventus'},
+            {cognome: 'Koopmeiners', ruolo: 'C', squadra: 'Juventus'},
+            {cognome: 'Adžić', ruolo: 'C', squadra: 'Juventus'},
+            {cognome: 'Yıldız', ruolo: 'A', squadra: 'Juventus'},
+            {cognome: 'Conceição', ruolo: 'A', squadra: 'Juventus'},
+            {cognome: 'González', ruolo: 'A', squadra: 'Juventus'},
+            {cognome: 'David', ruolo: 'A', squadra: 'Juventus'},
+            {cognome: 'Vlahović', ruolo: 'A', squadra: 'Juventus'},
+            {cognome: 'Milik', ruolo: 'A', squadra: 'Juventus'},
+            {cognome: 'Maignan', ruolo: 'P', squadra: 'Milan'},
+            {cognome: 'Terracciano', ruolo: 'P', squadra: 'Milan'},
+            {cognome: 'Torriani', ruolo: 'P', squadra: 'Milan'},
+            {cognome: 'De Winter', ruolo: 'D', squadra: 'Milan'},
+            {cognome: 'Tomori', ruolo: 'D', squadra: 'Milan'},
+            {cognome: 'Pavlović', ruolo: 'D', squadra: 'Milan'},
+            {cognome: 'Gabbia', ruolo: 'D', squadra: 'Milan'},
+            {cognome: 'Estupiñán', ruolo: 'D', squadra: 'Milan'},
+            {cognome: 'Bartesaghi', ruolo: 'D', squadra: 'Milan'},
+            {cognome: 'Jiménez', ruolo: 'D', squadra: 'Milan'},
+            {cognome: 'Athekame', ruolo: 'D', squadra: 'Milan'},
+            {cognome: 'Jashari', ruolo: 'C', squadra: 'Milan'},
+            {cognome: 'Ricci', ruolo: 'C', squadra: 'Milan'},
+            {cognome: 'Fofana', ruolo: 'C', squadra: 'Milan'},
+            {cognome: 'Bennacer', ruolo: 'C', squadra: 'Milan'},
+            {cognome: 'Adli', ruolo: 'C', squadra: 'Milan'},
+            {cognome: 'Musah', ruolo: 'C', squadra: 'Milan'},
+            {cognome: 'Loftus-Cheek', ruolo: 'C', squadra: 'Milan'},
+            {cognome: 'Modrić', ruolo: 'C', squadra: 'Milan'},
+            {cognome: 'Leão', ruolo: 'A', squadra: 'Milan'},
+            {cognome: 'Pulisic', ruolo: 'A', squadra: 'Milan'},
+            {cognome: 'Saelemaekers', ruolo: 'A', squadra: 'Milan'},
+            {cognome: 'Chukwueze', ruolo: 'A', squadra: 'Milan'},
+            {cognome: 'Gimenez', ruolo: 'A', squadra: 'Milan'},
+            {cognome: 'Carnesecchi', ruolo: 'P', squadra: 'Atalanta'},
+            {cognome: 'Sportiello', ruolo: 'P', squadra: 'Atalanta'},
+            {cognome: 'Rossi', ruolo: 'P', squadra: 'Atalanta'},
+            {cognome: 'Scalvini', ruolo: 'D', squadra: 'Atalanta'},
+            {cognome: 'Hien', ruolo: 'D', squadra: 'Atalanta'},
+            {cognome: 'Kossounou', ruolo: 'D', squadra: 'Atalanta'},
+            {cognome: 'Kolasinac', ruolo: 'D', squadra: 'Atalanta'},
+            {cognome: 'Djimsiti', ruolo: 'D', squadra: 'Atalanta'},
+            {cognome: 'Bonfanti', ruolo: 'D', squadra: 'Atalanta'},
+            {cognome: 'Bakker', ruolo: 'D', squadra: 'Atalanta'},
+            {cognome: 'Ahanor', ruolo: 'D', squadra: 'Atalanta'},
+            {cognome: 'Sulemana', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'de Roon', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'Éderson', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'Pasalić', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'Brescianini', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'Bellanova', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'Zappacosta', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'Palestra', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'Zalewski', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'De Ketelaere', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'Samardžić', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'Maldini', ruolo: 'C', squadra: 'Atalanta'},
+            {cognome: 'Lookman', ruolo: 'A', squadra: 'Atalanta'},
+            {cognome: 'Scamacca', ruolo: 'A', squadra: 'Atalanta'},
+            {cognome: 'Krstović', ruolo: 'A', squadra: 'Atalanta'},
+            {cognome: 'Touré', ruolo: 'A', squadra: 'Atalanta'},
+            {cognome: 'Meret', ruolo: 'P', squadra: 'Napoli'},
+            {cognome: 'Milinković-Savić', ruolo: 'P', squadra: 'Napoli'},
+            {cognome: 'Contini', ruolo: 'P', squadra: 'Napoli'},
+            {cognome: 'Buongiorno', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Beukema', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Rrahmani', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Marianucci', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Juan Jesus', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Gutiérrez', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Olivera', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Spinazzola', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Di Lorenzo', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Zanoli', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Mazzocchi', ruolo: 'D', squadra: 'Napoli'},
+            {cognome: 'Lobotka', ruolo: 'C', squadra: 'Napoli'},
+            {cognome: 'Gilmour', ruolo: 'C', squadra: 'Napoli'},
+            {cognome: 'McTominay', ruolo: 'C', squadra: 'Napoli'},
+            {cognome: 'Anguissa', ruolo: 'C', squadra: 'Napoli'},
+            {cognome: 'Hasa', ruolo: 'C', squadra: 'Napoli'},
+            {cognome: 'Saco', ruolo: 'C', squadra: 'Napoli'},
+            {cognome: 'De Bruyne', ruolo: 'C', squadra: 'Napoli'},
+            {cognome: 'Vergara', ruolo: 'C', squadra: 'Napoli'},
+            {cognome: 'Lang', ruolo: 'A', squadra: 'Napoli'},
+            {cognome: 'Neres', ruolo: 'A', squadra: 'Napoli'},
+            {cognome: 'Politano', ruolo: 'A', squadra: 'Napoli'},
+            {cognome: 'Lukaku', ruolo: 'A', squadra: 'Napoli'},
+            {cognome: 'Lucca', ruolo: 'A', squadra: 'Napoli'},
+            {cognome: 'Ambrosino', ruolo: 'A', squadra: 'Napoli'},
+            {cognome: 'Cheddira', ruolo: 'A', squadra: 'Napoli'},
+            {cognome: 'Svilar', ruolo: 'P', squadra: 'Roma'},
+            {cognome: 'Vásquez', ruolo: 'P', squadra: 'Roma'},
+            {cognome: 'Gollini', ruolo: 'P', squadra: 'Roma'},
+            {cognome: 'Zelezny', ruolo: 'P', squadra: 'Roma'},
+            {cognome: 'Ndicka', ruolo: 'D', squadra: 'Roma'},
+            {cognome: 'Mancini', ruolo: 'D', squadra: 'Roma'},
+            {cognome: 'Hermoso', ruolo: 'D', squadra: 'Roma'},
+            {cognome: 'Ghilardi', ruolo: 'D', squadra: 'Roma'},
+            {cognome: 'Angeliño', ruolo: 'D', squadra: 'Roma'},
+            {cognome: 'Salah-Eddine', ruolo: 'D', squadra: 'Roma'},
+            {cognome: 'Wesley', ruolo: 'D', squadra: 'Roma'},
+            {cognome: 'Rensch', ruolo: 'D', squadra: 'Roma'},
+            {cognome: 'Çelik', ruolo: 'D', squadra: 'Roma'},
+            {cognome: 'Sangaré', ruolo: 'D', squadra: 'Roma'},
+            {cognome: 'Cristante', ruolo: 'C', squadra: 'Roma'},
+            {cognome: 'Darboe', ruolo: 'C', squadra: 'Roma'},
+            {cognome: 'Koné', ruolo: 'C', squadra: 'Roma'},
+            {cognome: 'El Aynaoui', ruolo: 'C', squadra: 'Roma'},
+            {cognome: 'Pisilli', ruolo: 'C', squadra: 'Roma'},
+            {cognome: 'Bove', ruolo: 'C', squadra: 'Roma'},
+            {cognome: 'Baldanzi', ruolo: 'C', squadra: 'Roma'},
+            {cognome: 'Pellegrini', ruolo: 'C', squadra: 'Roma'},
+            {cognome: 'El Shaarawy', ruolo: 'A', squadra: 'Roma'},
+            {cognome: 'Soulé', ruolo: 'A', squadra: 'Roma'},
+            {cognome: 'Bailey', ruolo: 'A', squadra: 'Roma'},
+            {cognome: 'Dybala', ruolo: 'A', squadra: 'Roma'},
+            {cognome: 'Dovbyk', ruolo: 'A', squadra: 'Roma'},
+            {cognome: 'Ferguson', ruolo: 'A', squadra: 'Roma'},
+            {cognome: 'Skorupski', ruolo: 'P', squadra: 'Bologna'},
+            {cognome: 'Ravaglia', ruolo: 'P', squadra: 'Bologna'},
+            {cognome: 'Pessina', ruolo: 'P', squadra: 'Bologna'},
+            {cognome: 'Lucumí', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Vitík', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Posch', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Casale', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Ilić', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Heggem', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Bonifazi', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Miranda', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Lykogiannis', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Corazza', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Holm', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'De Silvestri', ruolo: 'D', squadra: 'Bologna'},
+            {cognome: 'Moro', ruolo: 'C', squadra: 'Bologna'},
+            {cognome: 'Ferguson', ruolo: 'C', squadra: 'Bologna'},
+            {cognome: 'Pobega', ruolo: 'C', squadra: 'Bologna'},
+            {cognome: 'Urbanski', ruolo: 'C', squadra: 'Bologna'},
+            {cognome: 'Freuler', ruolo: 'C', squadra: 'Bologna'},
+            {cognome: 'Zortea', ruolo: 'C', squadra: 'Bologna'},
+            {cognome: 'Odgaard', ruolo: 'C', squadra: 'Bologna'},
+            {cognome: 'Fabbian', ruolo: 'C', squadra: 'Bologna'},
+            {cognome: 'Domínguez', ruolo: 'A', squadra: 'Bologna'},
+            {cognome: 'Rowe', ruolo: 'A', squadra: 'Bologna'},
+            {cognome: 'Cambiaghi', ruolo: 'A', squadra: 'Bologna'},
+            {cognome: 'Karlsson', ruolo: 'A', squadra: 'Bologna'},
+            {cognome: 'Orsolini', ruolo: 'A', squadra: 'Bologna'},
+            {cognome: 'Bernardeschi', ruolo: 'A', squadra: 'Bologna'},
+            {cognome: 'Okwonkwo', ruolo: 'A', squadra: 'Bologna'},
+            {cognome: 'Castro', ruolo: 'A', squadra: 'Bologna'},
+            {cognome: 'Dallinga', ruolo: 'A', squadra: 'Bologna'},
+            {cognome: 'Immobile', ruolo: 'A', squadra: 'Bologna'},
+            {cognome: 'de Gea', ruolo: 'P', squadra: 'Fiorentina'},
+            {cognome: 'Martinelli', ruolo: 'P', squadra: 'Fiorentina'},
+            {cognome: 'Lezzerini', ruolo: 'P', squadra: 'Fiorentina'},
+            {cognome: 'Comuzzo', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Ranieri', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Pongracic', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Viti', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Marí', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Kouadio', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Kospo', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Fortini', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Gosens', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Parisi', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Dodô', ruolo: 'D', squadra: 'Fiorentina'},
+            {cognome: 'Mandragora', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Fagioli', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Fazzini', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Richardson', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Bianco', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Sohm', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Ndour', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Infantino', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Beltrán', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Barák', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Sabiri', ruolo: 'C', squadra: 'Fiorentina'},
+            {cognome: 'Ikoné', ruolo: 'A', squadra: 'Fiorentina'},
+            {cognome: 'Gudmundsson', ruolo: 'A', squadra: 'Fiorentina'},
+            {cognome: 'Kean', ruolo: 'A', squadra: 'Fiorentina'},
+            {cognome: 'Kouamé', ruolo: 'A', squadra: 'Fiorentina'},
+            {cognome: 'Džeko', ruolo: 'A', squadra: 'Fiorentina'},
+            {cognome: 'Braschi', ruolo: 'A', squadra: 'Fiorentina'},
+            {cognome: 'Mandas', ruolo: 'P', squadra: 'Lazio'},
+            {cognome: 'Provedel', ruolo: 'P', squadra: 'Lazio'},
+            {cognome: 'Furlanetto', ruolo: 'P', squadra: 'Lazio'},
+            {cognome: 'Gila', ruolo: 'D', squadra: 'Lazio'},
+            {cognome: 'Romagnoli', ruolo: 'D', squadra: 'Lazio'},
+            {cognome: 'Provstgaard', ruolo: 'D', squadra: 'Lazio'},
+            {cognome: 'Gigot', ruolo: 'D', squadra: 'Lazio'},
+            {cognome: 'Patric', ruolo: 'D', squadra: 'Lazio'},
+            {cognome: 'Tavares', ruolo: 'D', squadra: 'Lazio'},
+            {cognome: 'Pellegrini', ruolo: 'D', squadra: 'Lazio'},
+            {cognome: 'Kamenovic', ruolo: 'D', squadra: 'Lazio'},
+            {cognome: 'Marusic', ruolo: 'D', squadra: 'Lazio'},
+            {cognome: 'Hysaj', ruolo: 'D', squadra: 'Lazio'},
+            {cognome: 'Rovella', ruolo: 'C', squadra: 'Lazio'},
+            {cognome: 'Belahyane', ruolo: 'C', squadra: 'Lazio'},
+            {cognome: 'Cataldi', ruolo: 'C', squadra: 'Lazio'},
+            {cognome: 'Guendouzi', ruolo: 'C', squadra: 'Lazio'},
+            {cognome: 'Vecino', ruolo: 'C', squadra: 'Lazio'},
+            {cognome: 'Bašić', ruolo: 'C', squadra: 'Lazio'},
+            {cognome: 'Lazzari', ruolo: 'C', squadra: 'Lazio'},
+            {cognome: 'Dele-Bashiru', ruolo: 'C', squadra: 'Lazio'},
+            {cognome: 'Zaccagni', ruolo: 'A', squadra: 'Lazio'},
+            {cognome: 'Fernandes', ruolo: 'A', squadra: 'Lazio'},
+            {cognome: 'Isaksen', ruolo: 'A', squadra: 'Lazio'},
+            {cognome: 'Noslin', ruolo: 'A', squadra: 'Lazio'},
+            {cognome: 'Cancellieri', ruolo: 'A', squadra: 'Lazio'},
+            {cognome: 'Pedro', ruolo: 'A', squadra: 'Lazio'},
+            {cognome: 'Castellanos', ruolo: 'A', squadra: 'Lazio'},
+            {cognome: 'Dia', ruolo: 'A', squadra: 'Lazio'},
+            {cognome: 'Butez', ruolo: 'P', squadra: 'Como'},
+            {cognome: 'Vigorito', ruolo: 'P', squadra: 'Como'},
+            {cognome: 'Menke', ruolo: 'P', squadra: 'Como'},
+            {cognome: 'Dossena', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Kempf', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Goldaniga', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Jack', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Ramón', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Valle', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Moreno', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Sala', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Van der Brempt', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Vojvoda', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Smolcic', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Kovacik', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Cassandro', ruolo: 'D', squadra: 'Como'},
+            {cognome: 'Perrone', ruolo: 'C', squadra: 'Como'},
+            {cognome: 'Engelhardt', ruolo: 'C', squadra: 'Como'},
+            {cognome: 'Caqueret', ruolo: 'C', squadra: 'Como'},
+            {cognome: 'Da Cunha', ruolo: 'C', squadra: 'Como'},
+            {cognome: 'Roberto', ruolo: 'C', squadra: 'Como'},
+            {cognome: 'Kone', ruolo: 'C', squadra: 'Como'},
+            {cognome: 'Paz', ruolo: 'C', squadra: 'Como'},
+            {cognome: 'Baturina', ruolo: 'C', squadra: 'Como'},
+            {cognome: 'Alli', ruolo: 'C', squadra: 'Como'},
+            {cognome: 'Rodríguez', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Diao', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Jasim', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Kühn', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Addai', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Ballet', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Morata', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Douvikas', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Cutrone', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Azón', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Belotti', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Cerri', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Gabrielloni', ruolo: 'A', squadra: 'Como'},
+            {cognome: 'Turati', ruolo: 'P', squadra: 'Sassuolo'},
+            {cognome: 'Murić', ruolo: 'P', squadra: 'Sassuolo'},
+            {cognome: 'Zacchi', ruolo: 'P', squadra: 'Sassuolo'},
+            {cognome: 'Satalino', ruolo: 'P', squadra: 'Sassuolo'},
+            {cognome: 'Russo', ruolo: 'P', squadra: 'Sassuolo'},
+            {cognome: 'Idzes', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Muharemović', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Walukiewicz', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Odenthal', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Candé', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Ruan', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Romagna', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Doig', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Pieragnolo', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Missori', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Paz', ruolo: 'D', squadra: 'Sassuolo'},
+            {cognome: 'Boloca', ruolo: 'C', squadra: 'Sassuolo'},
+            {cognome: 'Lipani', ruolo: 'C', squadra: 'Sassuolo'},
+            {cognome: 'Ghion', ruolo: 'C', squadra: 'Sassuolo'},
+            {cognome: 'Koné', ruolo: 'C', squadra: 'Sassuolo'},
+            {cognome: 'Vranckx', ruolo: 'C', squadra: 'Sassuolo'},
+            {cognome: 'Caligara', ruolo: 'C', squadra: 'Sassuolo'},
+            {cognome: 'Iannoni', ruolo: 'C', squadra: 'Sassuolo'},
+            {cognome: 'Thorstvedt', ruolo: 'C', squadra: 'Sassuolo'},
+            {cognome: 'Volpato', ruolo: 'C', squadra: 'Sassuolo'},
+            {cognome: 'Laurienté', ruolo: 'A', squadra: 'Sassuolo'},
+            {cognome: 'Fadera', ruolo: 'A', squadra: 'Sassuolo'},
+            {cognome: 'Berardi', ruolo: 'A', squadra: 'Sassuolo'},
+            {cognome: 'Pierini', ruolo: 'A', squadra: 'Sassuolo'},
+            {cognome: 'Pinamonti', ruolo: 'A', squadra: 'Sassuolo'},
+            {cognome: 'Mulattieri', ruolo: 'A', squadra: 'Sassuolo'},
+            {cognome: 'Álvarez', ruolo: 'A', squadra: 'Sassuolo'},
+            {cognome: 'Skjellerup', ruolo: 'A', squadra: 'Sassuolo'},
+            {cognome: 'Moro', ruolo: 'A', squadra: 'Sassuolo'},
+            {cognome: 'Israel', ruolo: 'P', squadra: 'Torino'},
+            {cognome: 'Popa', ruolo: 'P', squadra: 'Torino'},
+            {cognome: 'Paleari', ruolo: 'P', squadra: 'Torino'},
+            {cognome: 'Coco', ruolo: 'D', squadra: 'Torino'},
+            {cognome: 'Ismajli', ruolo: 'D', squadra: 'Torino'},
+            {cognome: 'Schuurs', ruolo: 'D', squadra: 'Torino'},
+            {cognome: 'Maripán', ruolo: 'D', squadra: 'Torino'},
+            {cognome: 'Sazonov', ruolo: 'D', squadra: 'Torino'},
+            {cognome: 'Masina', ruolo: 'D', squadra: 'Torino'},
+            {cognome: 'Biraghi', ruolo: 'D', squadra: 'Torino'},
+            {cognome: 'Bianay Balcot', ruolo: 'D', squadra: 'Torino'},
+            {cognome: 'Tamèze', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Ilić', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Casadei', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Gineitis', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'İlkhan', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Ciammaglichella', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Lazaro', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Pedersen', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Dembélé', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Bayeye', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Vlašić', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Anjorin', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Perciun', ruolo: 'C', squadra: 'Torino'},
+            {cognome: 'Njie', ruolo: 'A', squadra: 'Torino'},
+            {cognome: 'Aboukhlal', ruolo: 'A', squadra: 'Torino'},
+            {cognome: 'Ngonge', ruolo: 'A', squadra: 'Torino'},
+            {cognome: 'Savva', ruolo: 'A', squadra: 'Torino'},
+            {cognome: 'Adams', ruolo: 'A', squadra: 'Torino'},
+            {cognome: 'Simeone', ruolo: 'A', squadra: 'Torino'},
+            {cognome: 'Zapata', ruolo: 'A', squadra: 'Torino'},
+            {cognome: 'Suzuki', ruolo: 'P', squadra: 'Parma'},
+            {cognome: 'Corvi', ruolo: 'P', squadra: 'Parma'},
+            {cognome: 'Rinaldi', ruolo: 'P', squadra: 'Parma'},
+            {cognome: 'Circati', ruolo: 'D', squadra: 'Parma'},
+            {cognome: 'Ndiaye', ruolo: 'D', squadra: 'Parma'},
+            {cognome: 'Troilo', ruolo: 'D', squadra: 'Parma'},
+            {cognome: 'Balogh', ruolo: 'D', squadra: 'Parma'},
+            {cognome: 'Valenti', ruolo: 'D', squadra: 'Parma'},
+            {cognome: 'Trabucchi', ruolo: 'D', squadra: 'Parma'},
+            {cognome: 'Amoran', ruolo: 'D', squadra: 'Parma'},
+            {cognome: 'Løvik', ruolo: 'D', squadra: 'Parma'},
+            {cognome: 'Valeri', ruolo: 'D', squadra: 'Parma'},
+            {cognome: 'Delprato', ruolo: 'D', squadra: 'Parma'},
+            {cognome: 'Keita', ruolo: 'C', squadra: 'Parma'},
+            {cognome: 'Estévez', ruolo: 'C', squadra: 'Parma'},
+            {cognome: 'Bernabé', ruolo: 'C', squadra: 'Parma'},
+            {cognome: 'Sørensen', ruolo: 'C', squadra: 'Parma'},
+            {cognome: 'Ordóñez', ruolo: 'C', squadra: 'Parma'},
+            {cognome: 'Hernani', ruolo: 'C', squadra: 'Parma'},
+            {cognome: 'Plicco', ruolo: 'C', squadra: 'Parma'},
+            {cognome: 'Ondrejka', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Benedyczak', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Joujou', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Begic', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Almqvist', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Haj Mohamed', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Frigan', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Pellegrino', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Djuric', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Charpentier', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Sits', ruolo: 'A', squadra: 'Parma'},
+            {cognome: 'Leali', ruolo: 'P', squadra: 'Genoa'},
+            {cognome: 'Siegrist', ruolo: 'P', squadra: 'Genoa'},
+            {cognome: 'Sommariva', ruolo: 'P', squadra: 'Genoa'},
+            {cognome: 'Vásquez', ruolo: 'D', squadra: 'Genoa'},
+            {cognome: 'Ostigard', ruolo: 'D', squadra: 'Genoa'},
+            {cognome: 'Vogliacco', ruolo: 'D', squadra: 'Genoa'},
+            {cognome: 'Marcandalli', ruolo: 'D', squadra: 'Genoa'},
+            {cognome: 'Otoa', ruolo: 'D', squadra: 'Genoa'},
+            {cognome: 'Martín', ruolo: 'D', squadra: 'Genoa'},
+            {cognome: 'Norton-Cuffy', ruolo: 'D', squadra: 'Genoa'},
+            {cognome: 'Sabelli', ruolo: 'D', squadra: 'Genoa'},
+            {cognome: 'Bohinen', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Frendrup', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Masini', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Ellertsson', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Thorsby', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Carboni', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Grønbæk', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Stanciu', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Malinovskyi', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Papadopoulos', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Cuenca', ruolo: 'C', squadra: 'Genoa'},
+            {cognome: 'Messias', ruolo: 'A', squadra: 'Genoa'},
+            {cognome: 'Venturino', ruolo: 'A', squadra: 'Genoa'},
+            {cognome: 'Fini', ruolo: 'A', squadra: 'Genoa'},
+            {cognome: 'Vitinha', ruolo: 'A', squadra: 'Genoa'},
+            {cognome: 'Ekhator', ruolo: 'A', squadra: 'Genoa'},
+            {cognome: 'Colombo', ruolo: 'A', squadra: 'Genoa'},
+            {cognome: 'Ekuban', ruolo: 'A', squadra: 'Genoa'},
+            {cognome: 'Ankeye', ruolo: 'A', squadra: 'Genoa'},
+            {cognome: 'Okoye', ruolo: 'P', squadra: 'Udinese'},
+            {cognome: 'Sava', ruolo: 'P', squadra: 'Udinese'},
+            {cognome: 'Nunziante', ruolo: 'P', squadra: 'Udinese'},
+            {cognome: 'Padelli', ruolo: 'P', squadra: 'Udinese'},
+            {cognome: 'Solet', ruolo: 'D', squadra: 'Udinese'},
+            {cognome: 'Goglichidze', ruolo: 'D', squadra: 'Udinese'},
+            {cognome: 'Bertola', ruolo: 'D', squadra: 'Udinese'},
+            {cognome: 'Kristensen', ruolo: 'D', squadra: 'Udinese'},
+            {cognome: 'Palma', ruolo: 'D', squadra: 'Udinese'},
+            {cognome: 'Kabasele', ruolo: 'D', squadra: 'Udinese'},
+            {cognome: 'De Paoli', ruolo: 'D', squadra: 'Udinese'},
+            {cognome: 'Zemura', ruolo: 'D', squadra: 'Udinese'},
+            {cognome: 'Kamara', ruolo: 'D', squadra: 'Udinese'},
+            {cognome: 'Ehizibue', ruolo: 'D', squadra: 'Udinese'},
+            {cognome: 'Karlström', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Camara', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Lovrić', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Atta', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Miller', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Ekkelenkamp', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Piotrowski', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Zarraga', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Modesto', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Ballarini', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Pejičić', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Popov', ruolo: 'C', squadra: 'Udinese'},
+            {cognome: 'Bayo', ruolo: 'A', squadra: 'Udinese'},
+            {cognome: 'Davis', ruolo: 'A', squadra: 'Udinese'},
+            {cognome: 'Pizarro', ruolo: 'A', squadra: 'Udinese'},
+            {cognome: 'Bravo', ruolo: 'A', squadra: 'Udinese'},
+            {cognome: 'Sánchez', ruolo: 'A', squadra: 'Udinese'},
+            {cognome: 'Caprile', ruolo: 'P', squadra: 'Cagliari'},
+            {cognome: 'Radunović', ruolo: 'P', squadra: 'Cagliari'},
+            {cognome: 'Iliev', ruolo: 'P', squadra: 'Cagliari'},
+            {cognome: 'Ciocci', ruolo: 'P', squadra: 'Cagliari'},
+            {cognome: 'Luperto', ruolo: 'D', squadra: 'Cagliari'},
+            {cognome: 'Mina', ruolo: 'D', squadra: 'Cagliari'},
+            {cognome: 'Obert', ruolo: 'D', squadra: 'Cagliari'},
+            {cognome: 'Pintus', ruolo: 'D', squadra: 'Cagliari'},
+            {cognome: 'Idrissi', ruolo: 'D', squadra: 'Cagliari'},
+            {cognome: 'Zappa', ruolo: 'D', squadra: 'Cagliari'},
+            {cognome: 'Di Pardo', ruolo: 'D', squadra: 'Cagliari'},
+            {cognome: 'Prati', ruolo: 'C', squadra: 'Cagliari'},
+            {cognome: 'Folorunsho', ruolo: 'C', squadra: 'Cagliari'},
+            {cognome: 'Adopo', ruolo: 'C', squadra: 'Cagliari'},
+            {cognome: 'Deiola', ruolo: 'C', squadra: 'Cagliari'},
+            {cognome: 'Mazzitelli', ruolo: 'C', squadra: 'Cagliari'},
+            {cognome: 'Rog', ruolo: 'C', squadra: 'Cagliari'},
+            {cognome: 'Gaetano', ruolo: 'C', squadra: 'Cagliari'},
+            {cognome: 'Cavuoti', ruolo: 'C', squadra: 'Cagliari'},
+            {cognome: 'Felici', ruolo: 'A', squadra: 'Cagliari'},
+            {cognome: 'Vinciguerra', ruolo: 'A', squadra: 'Cagliari'},
+            {cognome: 'Esposito', ruolo: 'A', squadra: 'Cagliari'},
+            {cognome: 'Kılıçsoy', ruolo: 'A', squadra: 'Cagliari'},
+            {cognome: 'Piccoli', ruolo: 'A', squadra: 'Cagliari'},
+            {cognome: 'Luvumbo', ruolo: 'A', squadra: 'Cagliari'},
+            {cognome: 'Borrelli', ruolo: 'A', squadra: 'Cagliari'},
+            {cognome: 'Pavoletti', ruolo: 'A', squadra: 'Cagliari'},
+            {cognome: 'Semper', ruolo: 'P', squadra: 'Pisa'},
+            {cognome: 'Scuffet', ruolo: 'P', squadra: 'Pisa'},
+            {cognome: 'Vukovic', ruolo: 'P', squadra: 'Pisa'},
+            {cognome: 'Nícolas', ruolo: 'P', squadra: 'Pisa'},
+            {cognome: 'Canestrelli', ruolo: 'D', squadra: 'Pisa'},
+            {cognome: 'Coppola', ruolo: 'D', squadra: 'Pisa'},
+            {cognome: 'Rus', ruolo: 'D', squadra: 'Pisa'},
+            {cognome: 'Calabresi', ruolo: 'D', squadra: 'Pisa'},
+            {cognome: 'Denoon', ruolo: 'D', squadra: 'Pisa'},
+            {cognome: 'Lusuardi', ruolo: 'D', squadra: 'Pisa'},
+            {cognome: 'Caracciolo', ruolo: 'D', squadra: 'Pisa'},
+            {cognome: 'Angori', ruolo: 'D', squadra: 'Pisa'},
+            {cognome: 'Beruatto', ruolo: 'D', squadra: 'Pisa'},
+            {cognome: 'Esteves', ruolo: 'D', squadra: 'Pisa'},
+            {cognome: 'Marin', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'Højholt', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'Jevšenak', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'Aebischer', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'Vural', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'Piccinini', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'Akinsanmiro', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'Touré', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'A. Cuadrado', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'Tramoni', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'Moreo', ruolo: 'C', squadra: 'Pisa'},
+            {cognome: 'Léris', ruolo: 'A', squadra: 'Pisa'},
+            {cognome: 'Arena', ruolo: 'A', squadra: 'Pisa'},
+            {cognome: 'Vignato', ruolo: 'A', squadra: 'Pisa'},
+            {cognome: 'Durmush', ruolo: 'A', squadra: 'Pisa'},
+            {cognome: 'Nzola', ruolo: 'A', squadra: 'Pisa'},
+            {cognome: 'Lind', ruolo: 'A', squadra: 'Pisa'},
+            {cognome: 'Meister', ruolo: 'A', squadra: 'Pisa'},
+            {cognome: 'Dubickas', ruolo: 'A', squadra: 'Pisa'},
+            {cognome: 'Giani', ruolo: 'A', squadra: 'Pisa'},
+            {cognome: 'Falcone', ruolo: 'P', squadra: 'Lecce'},
+            {cognome: 'Früchtl', ruolo: 'P', squadra: 'Lecce'},
+            {cognome: 'Samooja', ruolo: 'P', squadra: 'Lecce'},
+            {cognome: 'Siebert', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Gaspar', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Jean', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Gabriel', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Pérez', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Gallo', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Ndaba', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Addo', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Guilbert', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Kouassi', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Veiga', ruolo: 'D', squadra: 'Lecce'},
+            {cognome: 'Ramadani', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Pierret', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Gorter', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Maleh', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Helgason', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Coulibaly', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Kaba', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Berisha', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Rafia', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Sala', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Kovač', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Marchwinski', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Oudin', ruolo: 'C', squadra: 'Lecce'},
+            {cognome: 'Sottil', ruolo: 'A', squadra: 'Lecce'},
+            {cognome: 'Banda', ruolo: 'A', squadra: 'Lecce'},
+            {cognome: 'Morente', ruolo: 'A', squadra: 'Lecce'},
+            {cognome: 'Pierotti', ruolo: 'A', squadra: 'Lecce'},
+            {cognome: 'N’Dri', ruolo: 'A', squadra: 'Lecce'},
+            {cognome: 'Camarda', ruolo: 'A', squadra: 'Lecce'},
+            {cognome: 'Montipò', ruolo: 'P', squadra: 'Verona'},
+            {cognome: 'Perilli', ruolo: 'P', squadra: 'Verona'},
+            {cognome: 'Toniolo', ruolo: 'P', squadra: 'Verona'},
+            {cognome: 'Chiesa', ruolo: 'P', squadra: 'Verona'},
+            {cognome: 'Nelsson', ruolo: 'D', squadra: 'Verona'},
+            {cognome: 'Valentini', ruolo: 'D', squadra: 'Verona'},
+            {cognome: 'Núñez', ruolo: 'D', squadra: 'Verona'},
+            {cognome: 'Slotsager', ruolo: 'D', squadra: 'Verona'},
+            {cognome: 'Ebosse', ruolo: 'D', squadra: 'Verona'},
+            {cognome: 'Bradarić', ruolo: 'D', squadra: 'Verona'},
+            {cognome: 'Frese', ruolo: 'D', squadra: 'Verona'},
+            {cognome: 'Belghali', ruolo: 'D', squadra: 'Verona'},
+            {cognome: 'Oyegoke', ruolo: 'D', squadra: 'Verona'},
+            {cognome: 'Niasse', ruolo: 'C', squadra: 'Verona'},
+            {cognome: 'Charlys', ruolo: 'C', squadra: 'Verona'},
+            {cognome: 'Serdar', ruolo: 'C', squadra: 'Verona'},
+            {cognome: 'Bernede', ruolo: 'C', squadra: 'Verona'},
+            {cognome: 'Harroui', ruolo: 'C', squadra: 'Verona'},
+            {cognome: 'Santiago', ruolo: 'C', squadra: 'Verona'},
+            {cognome: 'Suslov', ruolo: 'C', squadra: 'Verona'},
+            {cognome: 'Kastanos', ruolo: 'C', squadra: 'Verona'},
+            {cognome: 'Mitrović', ruolo: 'A', squadra: 'Verona'},
+            {cognome: 'Braaf', ruolo: 'A', squadra: 'Verona'},
+            {cognome: 'Sarr', ruolo: 'A', squadra: 'Verona'},
+            {cognome: 'Giovane', ruolo: 'A', squadra: 'Verona'},
+            {cognome: 'Mosquera', ruolo: 'A', squadra: 'Verona'},
+            {cognome: 'Rocha Livramento', ruolo: 'A', squadra: 'Verona'},
+            {cognome: 'Lambourde', ruolo: 'A', squadra: 'Verona'},
+            {cognome: 'Ajayi', ruolo: 'A', squadra: 'Verona'},
+            {cognome: 'Audero', ruolo: 'P', squadra: 'Cremonese'},
+            {cognome: 'Silvestri', ruolo: 'P', squadra: 'Cremonese'},
+            {cognome: 'Saro', ruolo: 'P', squadra: 'Cremonese'},
+            {cognome: 'Nava', ruolo: 'P', squadra: 'Cremonese'},
+            {cognome: 'Baschirotto', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Folino', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Bianchetti', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Ceccherini', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Moretti', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Pezzella', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Sernicola', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Rocchetti', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Terracciano', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Barbieri', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Floriani Mussolini', ruolo: 'D', squadra: 'Cremonese'},
+            {cognome: 'Pickel', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Grassi', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Castagnetti', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Bondo', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Payero', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Vandeputte', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Collocolo', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Valoti', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Lordkipanidze', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Zerbin', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Vázquez', ruolo: 'C', squadra: 'Cremonese'},
+            {cognome: 'Johnsen', ruolo: 'A', squadra: 'Cremonese'},
+            {cognome: 'Sanabria', ruolo: 'A', squadra: 'Cremonese'},
+            {cognome: 'Okereke', ruolo: 'A', squadra: 'Cremonese'},
+            {cognome: 'De Luca', ruolo: 'A', squadra: 'Cremonese'},
+            {cognome: 'Bonazzoli', ruolo: 'A', squadra: 'Cremonese'},
+            {cognome: 'Tsadjout', ruolo: 'A', squadra: 'Cremonese'}
+        ];
+
+        const modules = {
+            '3-3-4': {d: 3, c: 3, a: 4},
+            '3-4-3': {d: 3, c: 4, a: 3},
+            '3-5-2': {d: 3, c: 5, a: 2},
+            '3-6-1': {d: 3, c: 6, a: 1},
+            '4-2-4': {d: 4, c: 2, a: 4},
+            '4-3-3': {d: 4, c: 3, a: 3},
+            '4-4-2': {d: 4, c: 4, a: 2},
+            '4-5-1': {d: 4, c: 5, a: 1},
+            '5-2-3': {d: 5, c: 2, a: 3},
+            '5-3-2': {d: 5, c: 3, a: 2},
+            '5-4-1': {d: 5, c: 4, a: 1},
+            '6-3-1': {d: 6, c: 3, a: 1}
+        };
+
+        const benchSlots = {
+            P: 2, // 2 reserve goalkeepers
+            D: 5, // 5 reserve defenders
+            C: 5, // 5 reserve midfielders
+            A: 5  // 5 reserve forwards
+        };
+
+        let currentModule = '3-4-3';
+        let selectedSlot = null;
+        let squad = {};
+
+        function getSlotRole(slotId) {
+            if (slotId.startsWith('P') || slotId.startsWith('BP')) return 'P';
+            if (slotId.startsWith('D') || slotId.startsWith('BD')) return 'D';
+            if (slotId.startsWith('C') || slotId.startsWith('BC')) return 'C';
+            if (slotId.startsWith('A') || slotId.startsWith('BA')) return 'A';
+        }
+
+        function isPlayerInSquad(cognome) {
+            return Object.values(squad).some(p => p && p.cognome === cognome);
+        }
+
+        function renderField() {
+            const field = document.getElementById('field');
+            field.innerHTML = '';
+            const mod = modules[currentModule];
+
+            // Goalkeeper
+            const gkLine = document.createElement('div');
+            gkLine.className = 'line gk';
+            const gkSlot = document.createElement('div');
+            gkSlot.id = 'P1';
+            gkSlot.className = 'slot';
+            gkSlot.innerHTML = squad['P1'] ? squad['P1'].cognome : 'P';
+            gkSlot.addEventListener('click', () => openModal('P1'));
+            gkLine.appendChild(gkSlot);
+            field.appendChild(gkLine);
+
+            // Defenders
+            const defLine = document.createElement('div');
+            defLine.className = 'line def';
+            for (let i = 1; i <= mod.d; i++) {
+                const slot = document.createElement('div');
+                slot.id = `D${i}`;
+                slot.className = 'slot';
+                slot.innerHTML = squad[`D${i}`] ? squad[`D${i}`].cognome : 'D';
+                slot.addEventListener('click', () => openModal(`D${i}`));
+                defLine.appendChild(slot);
+            }
+            field.appendChild(defLine);
+
+            // Midfielders
+            const midLine = document.createElement('div');
+            midLine.className = 'line mid';
+            for (let i = 1; i <= mod.c; i++) {
+                const slot = document.createElement('div');
+                slot.id = `C${i}`;
+                slot.className = 'slot';
+                slot.innerHTML = squad[`C${i}`] ? squad[`C${i}`].cognome : 'C';
+                slot.addEventListener('click', () => openModal(`C${i}`));
+                midLine.appendChild(slot);
+            }
+            field.appendChild(midLine);
+
+            // Forwards
+            const fwdLine = document.createElement('div');
+            fwdLine.className = 'line fwd';
+            for (let i = 1; i <= mod.a; i++) {
+                const slot = document.createElement('div');
+                slot.id = `A${i}`;
+                slot.className = 'slot';
+                slot.innerHTML = squad[`A${i}`] ? squad[`A${i}`].cognome : 'A';
+                slot.addEventListener('click', () => openModal(`A${i}`));
+                fwdLine.appendChild(slot);
+            }
+            field.appendChild(fwdLine);
+
+            renderBench();
+        }
+
+        function renderBench() {
+            const benchSlotsDiv = document.getElementById('bench-slots');
+            benchSlotsDiv.innerHTML = '';
+
+            // Render bench slots for each role
+            const roles = ['P', 'D', 'C', 'A'];
+            roles.forEach(role => {
+                for (let i = 1; i <= benchSlots[role]; i++) {
+                    const slot = document.createElement('div');
+                    slot.id = `B${role}${i}`;
+                    slot.className = 'slot';
+                    slot.innerHTML = squad[`B${role}${i}`] ? squad[`B${role}${i}`].cognome : role;
+                    slot.addEventListener('click', () => openModal(`B${role}${i}`));
+                    benchSlotsDiv.appendChild(slot);
+                }
+            });
+        }
+
+        function openModal(slotId) {
+            selectedSlot = slotId;
+            const modal = document.getElementById('modal');
+            const modalPlayers = document.getElementById('modal-players');
+            const role = getSlotRole(slotId);
+            modalPlayers.innerHTML = '';
+
+            const filteredPlayers = players.filter(p => p.ruolo === role && !isPlayerInSquad(p.cognome));
+            filteredPlayers.forEach(player => {
+                const li = document.createElement('li');
+                li.innerHTML = `${player.cognome} (${player.squadra})`;
+                li.addEventListener('click', () => {
+                    squad[slotId] = player;
+                    renderField();
+                    modal.style.display = 'none';
+                });
+                modalPlayers.appendChild(li);
+            });
+
+            modal.style.display = 'flex';
+        }
+
+        function filterPlayers() {
+            const searchInput = document.getElementById('modal-search').value.toLowerCase();
+            const modalPlayers = document.getElementById('modal-players');
+            const role = getSlotRole(selectedSlot);
+            modalPlayers.innerHTML = '';
+
+            const filteredPlayers = players.filter(p => 
+                p.ruolo === role && 
+                !isPlayerInSquad(p.cognome) && 
+                p.cognome.toLowerCase().includes(searchInput)
+            );
+
+            filteredPlayers.forEach(player => {
+                const li = document.createElement('li');
+                li.innerHTML = `${player.cognome} (${player.squadra})`;
+                li.addEventListener('click', () => {
+                    squad[selectedSlot] = player;
+                    renderField();
+                    document.getElementById('modal').style.display = 'none';
+                });
+                modalPlayers.appendChild(li);
+            });
+        }
+
+        document.getElementById('module-select').addEventListener('change', (e) => {
+            currentModule = e.target.value;
+            // Clear invalid slots for new module
+            const mod = modules[currentModule];
+            const newSquad = {};
+            Object.keys(squad).forEach(key => {
+                const role = getSlotRole(key);
+                const index = parseInt(key.match(/\d+$/) || 0);
+                if (
+                    (role === 'P' && key.startsWith('P') && index === 1) ||
+                    (role === 'D' && key.startsWith('D') && index <= mod.d) ||
+                    (role === 'C' && key.startsWith('C') && index <= mod.c) ||
+                    (role === 'A' && key.startsWith('A') && index <= mod.a) ||
+                    (key.startsWith('B'))
+                ) {
+                    newSquad[key] = squad[key];
+                }
+            });
+            squad = newSquad;
+            renderField();
+        });
+
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            squad = {};
+            renderField();
+        });
+
+        document.getElementById('new-btn').addEventListener('click', () => {
+            squad = {};
+            currentModule = document.getElementById('module-select').value;
+            renderField();
+        });
+
+        document.getElementById('download-btn').addEventListener('click', () => {
+            html2canvas(document.getElementById('field-container')).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'fantacalcio_squad.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        });
+
+        document.getElementById('modal-close').addEventListener('click', () => {
+            document.getElementById('modal').style.display = 'none';
+        });
+
+        document.getElementById('modal-search').addEventListener('input', filterPlayers);
+
+        // Initial render
+        renderField();
+    </script>
